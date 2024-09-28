@@ -381,7 +381,16 @@ def run_game():
 def ai_attack(attack_board, opponent_game_board, opponent_ships):
     if ai_difficulty == 'easy':
         # AI fires randomly every turn
-
+        while True:
+            attack_row = random.randint(0, 9)
+            attack_col = random.randint(0, 9)
+            if opponent_game_board[attack_row][attack_col] in (' ', 'S'):
+                hit = process_attack(attack_row, attack_col, attack_board, opponent_game_board, opponent_ships)
+                if hit:
+                    shot = "AI hits your ship!"
+                else:
+                    shot = "AI misses."
+                break
     elif ai_difficulty == 'medium':
         # AI fires randomly until it hits a ship then fires in orthogonally adjacent spaces to find other hits until a ship is sunk
         global ai_targets
@@ -435,7 +444,16 @@ def ai_attack(attack_board, opponent_game_board, opponent_ships):
 
 def add_adjacent_targets(row, col, opponent_game_board):
     # Add orthogonally adjacent positions to ai_targets if they are within bounds and not already attacked
-
+    adjacent_positions = [
+        (row -1, col), # Up
+        (row +1, col), # Down
+        (row, col -1), # Left
+        (row, col +1) # Right
+    ]
+    for r, c in adjacent_positions:
+        if 0 <= r < 10 and 0 <= c <10:
+            if opponent_game_board[r][c] not in (f'{RED}X{BLUE}', f'{RED}O{BLUE}'):
+                ai_targets.append((r, c)) # Add position to ai_targets list
 
 def main():
     game_setup()
