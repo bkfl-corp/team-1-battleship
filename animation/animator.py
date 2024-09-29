@@ -8,12 +8,12 @@ from animation import AnimationType
 
 class Animator:
     def __init__(self):
-        self.you_win_anim = [ 
+        self._you_win_anim = [ 
                                 "=+=+=+=\nYou Win\n+=+=+=+",
                                 "+=+=+=+\nYou Win\n=+=+=+=",
                             ]
         
-        self.miss_anim = [
+        self._miss_anim = [
                             """
                                                 
                                                O
@@ -48,7 +48,7 @@ class Animator:
                             """,
                         ]
         
-        self.hit_anim = [
+        self._hit_anim = [
                             """
                                                 
                                                 
@@ -87,13 +87,13 @@ class Animator:
 
         match anim:
             case AnimationType.HIT:
-                Animator._run_animation(self.hit_anim)
+                Animator._run_animation(self._hit_anim)
 
             case AnimationType.MISS:
-                Animator._run_animation(self.miss_anim)
+                Animator._run_animation(self._miss_anim)
 
             case AnimationType.WIN:
-                Animator._run_animation(self.you_win_anim*5)
+                Animator._run_animation(self._you_win_anim*5)
     
     @staticmethod
     def _run_animation(frames):
