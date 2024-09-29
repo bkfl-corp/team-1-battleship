@@ -23,9 +23,9 @@ DEFAULT = '\033[0m'
 
 # Initialize pygame's mixer
 pygame.mixer.init()
-hit_sound = pygame.mixer.Sound('shot_hit_sound.wav')
-shot_sound = pygame.mixer.Sound('shot_sound.wav')
-endgame_sound = pygame.mixer.Sound('endgame.wav')
+hit_sound = pygame.mixer.Sound('sounds/shot_hit_sound.wav')
+shot_sound = pygame.mixer.Sound('sounds/shot_sound.wav')
+endgame_sound = pygame.mixer.Sound('sounds/endgame.wav')
 
 
 # tracks respective player's attacks and current board using a 2D list
