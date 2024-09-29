@@ -19,6 +19,9 @@ from functools import partial
 
 from animation import Animator, AnimationType
 
+#silence pygame welcome message.
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
 #silence warnings from pygame.
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
