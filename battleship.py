@@ -9,6 +9,8 @@ Project 1 Collaborators/Sources: Michael Oliver, Peter Pham, Jack Youngquist, An
 Project 1 Date: Aug 31 2024
 Project 2 Collaborators: James Hurd, Joshua Lee, Will Whitehead, Trent Gould, Ky Le
 '''
+
+#imports
 import os
 import random
 import time
@@ -17,7 +19,7 @@ from functools import partial
 
 from animation import Animator, AnimationType
 
-
+#silence warnings from pygame.
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import pygame
@@ -30,18 +32,21 @@ BLUE = '\033[94m'
 DEFAULT = '\033[0m'
 
 # Initialize pygame's mixer
-
 pygame.mixer.init()
 
+# add sounds to mixer
 hit_sound = pygame.mixer.Sound('sounds/shot_hit_sound.wav')
 shot_sound = pygame.mixer.Sound('sounds/shot_sound.wav')
 endgame_sound = pygame.mixer.Sound('sounds/endgame.wav')
 
+#instatiate animator
 animator = Animator()
 
 # tracks respective player's attacks and current board using a 2D list
 p1_game_board = [[' ']*10 for _ in range(10)] # track player's board incuding ship placement and enemy attacks
 p1_attack_board = [[' ']*10 for _ in range(10)] #track where player one has fired from their pov
+
+#similarly for player 2
 p2_game_board = [[' ']*10 for _ in range(10)]
 p2_attack_board = [[' ']*10 for _ in range(10)]
 
@@ -58,23 +63,34 @@ ai_targets = [] # List for medium AI target tracking
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+#print a game board with colors.
 def print_single_board(game_board):
     print(f"{'':<3}{BLUE}| ",end='')
+
+    #top axis labels
     for letter in 'ABCDEFGHIJ':
         print(f'{YELLOW}{letter}{BLUE} | ',end='')
     print('')
+
+    #board contents
     for index, row in enumerate(game_board):
         print(f'{"-"*45}')
         string = ''
         for cell in row:
             string = string + f' {cell} |'
         print(f"{YELLOW}{index+1:>2}{BLUE} |{string}")
+
+    #resture back to default color.
     print(DEFAULT)
 
+# Print both the attack board and the player's own board side by side
 def print_full_board(attack_board, game_board):
-    # Print both the attack board and the player's own board side by side
+
+    #abels
     print(f'{RED}Attack board:{DEFAULT}\t\t\t\t\t\t{GREEN}Your board:{DEFAULT}\n')
     string = f'{"":<3}{BLUE}| '
+
+    #top axis labels
     for letter in 'ABCDEFGHIJ':
         string += (f'{YELLOW}{letter}{BLUE} | ')
     string += '\t\t'
@@ -82,7 +98,8 @@ def print_full_board(attack_board, game_board):
     for letter in 'ABCDEFGHIJ':
         string += (f'{YELLOW}{letter}{BLUE} | ')
     string += '\n'
-
+    
+    #board contents.
     for index, (attack_board_row, game_board_row) in enumerate(zip(attack_board, game_board)):
         string += f'{"-"*45}\t\t{"-"*45}\n'
 
@@ -100,13 +117,16 @@ def print_full_board(attack_board, game_board):
 
 # Parameters: The players board, which player is being reffered to, the disctionary of that players ships
 # ChatGPT was used to split one ship placement function into two separate fundtions to query and validate ship placement.
+# get a space from the user and place a ship
 def query_ship_placement(game_board, player, player_ships):
     for ship, size in ships:
         while True:
+
             print_single_board(game_board)
             print(f'Player {player}, place your {ship} of size {size} [e.g., A1]:')
             start_pos = input('Enter the starting position:\n').lower()
-
+            
+            #case for ships bigger than one, requires more details.
             if size != 1:
                 direction = input('Enter direction (H for horizontal, V for vertical):\n').lower()
                 if direction == 'h':
@@ -119,11 +139,16 @@ def query_ship_placement(game_board, player, player_ships):
                     print(f"Invalid direction input! Please enter 'H' for horizontal or 'V' for vertical.") # If invalid input, reprompt
                     continue
                 
+                #validate input
                 if validate_ship_placement(start_pos, size, game_board, direction, horiz_dir, vert_dir):
+
+                    #if valid, place ship.
                     place_ship(start_pos, size, game_board, player_ships, ship, direction, horiz_dir, vert_dir)
                     break
                 else:
                     print(f'Invalid placement for {ship}. Try again.')
+
+            #if ship is length 1,
             else:
                 if validate_ship_placement(start_pos, size, game_board):
                     place_ship(start_pos, size, game_board, player_ships, ship)
@@ -131,6 +156,7 @@ def query_ship_placement(game_board, player, player_ships):
                 else:
                     print(f'Invalid placement for {ship}. Try again.')
 
+#make sure coordinates are valid to place ship.
 def validate_ship_placement(start_pos, size, game_board, direction=None, horiz_dir=None, vert_dir=None):
     if start_pos[0] in x and start_pos[1:] in y: # Verifies position is within the board dimensions
         col = x[start_pos[0]]  # Convert column letter to index
@@ -179,6 +205,7 @@ def validate_ship_placement(start_pos, size, game_board, direction=None, horiz_d
     else:
         return False
 
+#place a ship.
 def place_ship(start_pos, size, game_board, player_ships, ship_name,  direction=None, horiz_dir=None, vert_dir=None):
     col = x[start_pos[0]]  # Convert column letter to index
     row = int(start_pos[1:]) - 1  # Convert row number to index (0-based)
@@ -213,10 +240,15 @@ def place_ship(start_pos, size, game_board, player_ships, ship_name,  direction=
 
 # Check to see if a players ship is destoryed
 def check_ship_destroyed(player_ships, game_board):
+
     for ship, positions in player_ships.items():
+
+        #see if ship has been hit
         destroyed = all(game_board[row][col] == f'{RED}X{BLUE}' for row, col in positions)
         if destroyed:
             print(f"{RED}{ship} has been destroyed!{DEFAULT}")
+
+            #remove ship from dict
             del player_ships[ship]
             break
 
@@ -226,6 +258,7 @@ def check_winner(player_ships):
         return True
     return False
 
+#see if coordinate is valid attack target.
 def check_attack(attack_pos, game_board): # returns True if valid move
     if attack_pos[0] in x and attack_pos[1:] in y:
         attack_col = x[attack_pos[0]]
@@ -240,6 +273,7 @@ def check_attack(attack_pos, game_board): # returns True if valid move
         print(f'Please enter a valid cell to attack! [A1]')
         return False
 
+#setup game.
 def game_setup():
     global opponent_type
     global ai_difficulty
@@ -301,6 +335,7 @@ def game_setup():
         print('AI has placed its ships.')
         input('Press Enter to continue.')
 
+#ai ship placement function.
 def place_ai_ships(game_board, player_ships):
     # AI places ships randomly
     for ship, size in ships:
@@ -322,6 +357,7 @@ def place_ai_ships(game_board, player_ships):
                 place_ship(start_pos, size, game_board, player_ships, ship, direction, horiz_dir, vert_dir)
                 break
 
+#handle an attack.
 def process_attack(attack_row, attack_col, attacker_attack_board, defender_game_board, defender_ships):
     # Process an attack on the given coordinates, updates boards and checks for ship destruction.
     if defender_game_board[attack_row][attack_col] == 'S':
@@ -336,8 +372,8 @@ def process_attack(attack_row, attack_col, attacker_attack_board, defender_game_
         attacker_attack_board[attack_row][attack_col] = f'{RED}O{BLUE}'
         return False # Indicate a miss
 
+# Handle a player's turn by getting attack input and processing the attack
 def player_turn(player_num, attacker_attack_board, attacker_game_board, defender_game_board, defender_ships):
-    # Handle a player's turn by getting attack input and processing the attack
     clear_screen()
     print_full_board(attacker_attack_board, attacker_game_board)
     while True:
@@ -365,6 +401,7 @@ def player_turn(player_num, attacker_attack_board, attacker_game_board, defender
     print(shot)
     input("Press enter to end turn: ")
 
+#run a full game.
 def run_game():
     while True:
         # Player 1 turn
@@ -417,6 +454,7 @@ def run_game():
             time.sleep(3)
             break
 
+#have ai attack.
 def ai_attack(attack_board, opponent_game_board, opponent_ships):
     if ai_difficulty == 'easy':
         # AI fires randomly every turn
@@ -426,9 +464,11 @@ def ai_attack(attack_board, opponent_game_board, opponent_ships):
             if opponent_game_board[attack_row][attack_col] in (' ', 'S'):
                 hit = process_attack(attack_row, attack_col, attack_board, opponent_game_board, opponent_ships)
                 if hit:
+                    anim = partial(animator.play, AnimationType.HIT)
                     sound_effect = hit_sound
                     shot = "AI hits your ship!"
                 else:
+                    anim = partial(animator.play, AnimationType.MISS)
                     sound_effect = shot_sound
                     shot = "AI misses."
                 break
@@ -442,9 +482,11 @@ def ai_attack(attack_board, opponent_game_board, opponent_ships):
                 hit = process_attack(attack_row, attack_col, attack_board, opponent_game_board, opponent_ships)
                 if hit:
                     sound_effect = hit_sound
+                    anim = partial(animator.play, AnimationType.HIT)
                     shot = "AI hits your ship!"
                     add_adjacent_targets(attack_row, attack_col, opponent_game_board)
                 else:
+                    anim = partial(animator.play, AnimationType.MISS)
                     sound_effect = shot_sound
                     shot = "AI misses."
             else:
@@ -460,10 +502,12 @@ def ai_attack(attack_board, opponent_game_board, opponent_ships):
                     hit = process_attack(attack_row, attack_col, attack_board, opponent_game_board, opponent_ships)
                     if hit:
                         sound_effect = hit_sound
+                        anim = partial(animator.play, AnimationType.HIT)
                         shot = "AI hits your ship!"
                         add_adjacent_targets(attack_row, attack_col, opponent_game_board)
                     else:
                         sound_effect = shot_sound
+                        anim = partial(animator.play, AnimationType.MISS)
                         shot = "AI misses."
                     break
     elif ai_difficulty == 'hard':
@@ -473,9 +517,11 @@ def ai_attack(attack_board, opponent_game_board, opponent_ships):
                 if opponent_game_board[row][col] == 'S':
                     # Hit this ship
                     hit = process_attack(row, col, attack_board, opponent_game_board, opponent_ships)
+                    anim = partial(animator.play, AnimationType.HIT)
                     shot = "AI hits your ship!"
                     sound_effect = hit_sound
                     sound_effect.play()
+                    anim()
                     print(shot)
                     return
         # If no ships found, fire randomly
@@ -485,13 +531,15 @@ def ai_attack(attack_board, opponent_game_board, opponent_ships):
             if opponent_game_board[attack_row][attack_col] == ' ':
                 hit = process_attack(attack_row, attack_col, attack_board, opponent_game_board, opponent_ships)
                 sound_effect = shot_sound
+                anim = partial(animator.play, AnimationType.MISS)
                 shot = "AI misses."
                 break
     sound_effect.play()
+    anim()
     print(shot)
 
+# Add orthogonally adjacent positions to ai_targets if they are within bounds and not already attacked
 def add_adjacent_targets(row, col, opponent_game_board):
-    # Add orthogonally adjacent positions to ai_targets if they are within bounds and not already attacked
     adjacent_positions = [
         (row -1, col), # Up
         (row +1, col), # Down
@@ -503,6 +551,7 @@ def add_adjacent_targets(row, col, opponent_game_board):
             if opponent_game_board[r][c] not in (f'{RED}X{BLUE}', f'{RED}O{BLUE}'):
                 ai_targets.append((r, c)) # Add position to ai_targets list
 
+#main gameplay loop.
 def main():
     game_setup()
     run_game()
