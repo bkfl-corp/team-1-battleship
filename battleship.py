@@ -11,6 +11,8 @@ Project 2 Collaborators: James Hurd, Joshua Lee, Will Whitehead, Trent Gould, Ky
 '''
 import os
 import random
+import pygame
+import time
 
 # ANSI Coloring for text
 RED = '\033[91m'
@@ -18,6 +20,13 @@ GREEN = '\033[92m'
 YELLOW = '\033[93m'
 BLUE = '\033[94m'
 DEFAULT = '\033[0m'
+
+# Initialize pygame's mixer
+pygame.mixer.init()
+hit_sound = pygame.mixer.Sound('shot_hit_sound.wav')
+shot_sound = pygame.mixer.Sound('shot_sound.wav')
+endgame_sound = pygame.mixer.Sound('endgame.wav')
+
 
 # tracks respective player's attacks and current board using a 2D list
 p1_game_board = [[' ']*10 for _ in range(10)] # track player's board incuding ship placement and enemy attacks
@@ -331,13 +340,16 @@ def player_turn(player_num, attacker_attack_board, attacker_game_board, defender
         if check_attack(attack_pos, defender_game_board):
             hit = process_attack(attack_row, attack_col, attacker_attack_board, defender_game_board, defender_ships)
             if hit:
+                sound_effect = hit_sound
                 shot = "Hit!"
             else:
+                sound_effect = shot_sound
                 shot = "Miss"
             break
     clear_screen()
     print_full_board(attacker_attack_board, attacker_game_board)
     print(shot)
+    sound_effect.play()
     input("Press enter to end turn: ")
 
 def run_game():
@@ -347,13 +359,18 @@ def run_game():
 
         # Check if Player 1 has won
         if check_winner(p2_ships):
+            endgame_sound.play()
             print(f"Player 1 Wins!{DEFAULT}\n")
+            time.sleep(3)
             break
         elif check_winner(p1_ships):
             if opponent_type == 'AI':
+                endgame_sound.play()
                 print(f"AI Wins!{DEFAULT}\n")
             else:
+                endgame_sound.play()
                 print(f"Player 2 Wins!{DEFAULT}\n")
+            time.sleep(3)
             break
 
         if opponent_type == 'human':
@@ -370,12 +387,17 @@ def run_game():
         # Check if Player 2 has won
         if check_winner(p1_ships):
             if opponent_type == 'AI':
+                endgame_sound.play()
                 print(f"AI Wins!{DEFAULT}\n")
             else:
+                endgame_sound.play()
                 print(f"Player 2 Wins!{DEFAULT}\n")
+            time.sleep(3)
             break
         elif check_winner(p2_ships):
+            endgame_sound.play()
             print(f"Player 1 Wins!{DEFAULT}\n")
+            time.sleep(3)
             break
 
 def ai_attack(attack_board, opponent_game_board, opponent_ships):
@@ -387,8 +409,10 @@ def ai_attack(attack_board, opponent_game_board, opponent_ships):
             if opponent_game_board[attack_row][attack_col] in (' ', 'S'):
                 hit = process_attack(attack_row, attack_col, attack_board, opponent_game_board, opponent_ships)
                 if hit:
+                    sound_effect = hit_sound
                     shot = "AI hits your ship!"
                 else:
+                    sound_effect = shot_sound
                     shot = "AI misses."
                 break
     elif ai_difficulty == 'medium':
@@ -400,9 +424,11 @@ def ai_attack(attack_board, opponent_game_board, opponent_ships):
             if opponent_game_board[attack_row][attack_col] in (' ', 'S'):
                 hit = process_attack(attack_row, attack_col, attack_board, opponent_game_board, opponent_ships)
                 if hit:
+                    sound_effect = hit_sound
                     shot = "AI hits your ship!"
                     add_adjacent_targets(attack_row, attack_col, opponent_game_board)
                 else:
+                    sound_effect = shot_sound
                     shot = "AI misses."
             else:
                 # Cell already attacked, pick next target
@@ -416,9 +442,11 @@ def ai_attack(attack_board, opponent_game_board, opponent_ships):
                 if opponent_game_board[attack_row][attack_col] in (' ', 'S'):
                     hit = process_attack(attack_row, attack_col, attack_board, opponent_game_board, opponent_ships)
                     if hit:
+                        sound_effect = hit_sound
                         shot = "AI hits your ship!"
                         add_adjacent_targets(attack_row, attack_col, opponent_game_board)
                     else:
+                        sound_effect = shot_sound
                         shot = "AI misses."
                     break
     elif ai_difficulty == 'hard':
@@ -429,6 +457,8 @@ def ai_attack(attack_board, opponent_game_board, opponent_ships):
                     # Hit this ship
                     hit = process_attack(row, col, attack_board, opponent_game_board, opponent_ships)
                     shot = "AI hits your ship!"
+                    sound_effect = hit_sound
+                    sound_effect.play()
                     print(shot)
                     return
         # If no ships found, fire randomly
@@ -437,9 +467,10 @@ def ai_attack(attack_board, opponent_game_board, opponent_ships):
             attack_col = random.randint(0, 9)
             if opponent_game_board[attack_row][attack_col] == ' ':
                 hit = process_attack(attack_row, attack_col, attack_board, opponent_game_board, opponent_ships)
+                sound_effect = shot_sound
                 shot = "AI misses."
                 break
-
+    sound_effect.play()
     print(shot)
 
 def add_adjacent_targets(row, col, opponent_game_board):
