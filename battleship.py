@@ -13,6 +13,9 @@ import os
 import random
 import time
 import warnings
+from functools import partial
+
+from animation import Animator, AnimationType
 
 
 with warnings.catch_warnings():
@@ -34,6 +37,7 @@ hit_sound = pygame.mixer.Sound('sounds/shot_hit_sound.wav')
 shot_sound = pygame.mixer.Sound('sounds/shot_sound.wav')
 endgame_sound = pygame.mixer.Sound('sounds/endgame.wav')
 
+animator = Animator()
 
 # tracks respective player's attacks and current board using a 2D list
 p1_game_board = [[' ']*10 for _ in range(10)] # track player's board incuding ship placement and enemy attacks
@@ -53,7 +57,6 @@ ai_targets = [] # List for medium AI target tracking
 # system function to clear the terminal
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
-
 
 def print_single_board(game_board):
     print(f"{'':<3}{BLUE}| ",end='')
@@ -348,15 +351,18 @@ def player_turn(player_num, attacker_attack_board, attacker_game_board, defender
             hit = process_attack(attack_row, attack_col, attacker_attack_board, defender_game_board, defender_ships)
             if hit:
                 sound_effect = hit_sound
+                anim = partial(animator.play, AnimationType.HIT)
                 shot = "Hit!"
             else:
                 sound_effect = shot_sound
+                anim = partial(animator.play, AnimationType.MISS)
                 shot = "Miss"
             break
     clear_screen()
     print_full_board(attacker_attack_board, attacker_game_board)
-    print(shot)
     sound_effect.play()
+    anim()
+    print(shot)
     input("Press enter to end turn: ")
 
 def run_game():
@@ -367,6 +373,7 @@ def run_game():
         # Check if Player 1 has won
         if check_winner(p2_ships):
             endgame_sound.play()
+            animator.play(AnimationType.WIN)
             print(f"Player 1 Wins!{DEFAULT}\n")
             time.sleep(3)
             break
@@ -376,6 +383,7 @@ def run_game():
                 print(f"AI Wins!{DEFAULT}\n")
             else:
                 endgame_sound.play()
+                animator.play(Animation.WIN)
                 print(f"Player 2 Wins!{DEFAULT}\n")
             time.sleep(3)
             break
@@ -398,11 +406,13 @@ def run_game():
                 print(f"AI Wins!{DEFAULT}\n")
             else:
                 endgame_sound.play()
+                animator.play(Animation.WIN)
                 print(f"Player 2 Wins!{DEFAULT}\n")
             time.sleep(3)
             break
         elif check_winner(p2_ships):
             endgame_sound.play()
+            animator.play(Animation.WIN)
             print(f"Player 1 Wins!{DEFAULT}\n")
             time.sleep(3)
             break
