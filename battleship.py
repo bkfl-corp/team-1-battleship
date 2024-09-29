@@ -11,8 +11,13 @@ Project 2 Collaborators: James Hurd, Joshua Lee, Will Whitehead, Trent Gould, Ky
 '''
 import os
 import random
-import pygame
 import time
+import warnings
+
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import pygame
 
 # ANSI Coloring for text
 RED = '\033[91m'
@@ -22,7 +27,9 @@ BLUE = '\033[94m'
 DEFAULT = '\033[0m'
 
 # Initialize pygame's mixer
+
 pygame.mixer.init()
+
 hit_sound = pygame.mixer.Sound('sounds/shot_hit_sound.wav')
 shot_sound = pygame.mixer.Sound('sounds/shot_sound.wav')
 endgame_sound = pygame.mixer.Sound('sounds/endgame.wav')
