@@ -1,6 +1,6 @@
 # Battleship 2: Electric Boogaloo ⚡️
 
-Enjoy the latest release from your friends at the BKFL corp, *Battleship 2: Electric Boogaloo!*. Made as a sequal to the lovely
+Enjoy the latest release from your friends at the BKFL corp, *Battleship 2: Electric Boogaloo!*. Made as a sequel to the lovely
 game of battleship from our pals over at [team 1](https://github.com/PeterPgit/project1), *Battleship 2* adds to thier work by introducing
 sound effects, animations, and even everyone's favorite buzzword -- AI 😎
 
